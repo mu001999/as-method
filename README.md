@@ -1,5 +1,9 @@
 # as-method
 
+Call function using the method syntax!
+
+## Example
+
 ```rust
 mod a {
     use as_method::as_method;

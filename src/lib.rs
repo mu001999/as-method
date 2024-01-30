@@ -1,39 +1,8 @@
+#![doc = include_str!("../README.md")]
+
 use syn::visit_mut::VisitMut;
 
-struct ImplTraitReplace(Vec<syn::TypeParam>);
-
-impl VisitMut for ImplTraitReplace {
-    fn visit_type_mut(&mut self, node: &mut syn::Type) {
-        if let syn::Type::ImplTrait(type_impl_trait) = node {
-            let ident = quote::format_ident!("AS_METHOD_SELF_T{}", self.0.len());
-            self.0.push(syn::TypeParam {
-                attrs: Vec::new(),
-                ident: ident.clone(),
-                colon_token: None,
-                bounds: type_impl_trait.bounds.clone(),
-                eq_token: None,
-                default: None,
-            });
-
-            let mut segments = syn::punctuated::Punctuated::new();
-            segments.push(syn::PathSegment {
-                ident,
-                arguments: syn::PathArguments::None,
-            });
-
-            *node = syn::Type::Path(syn::TypePath {
-                qself: None,
-                path: syn::Path {
-                    leading_colon: None,
-                    segments,
-                },
-            });
-        } else {
-            syn::visit_mut::visit_type_mut(self, node);
-        }
-    }
-}
-
+/// Call function with the method syntax!
 #[proc_macro_attribute]
 pub fn as_method(
     attr: proc_macro::TokenStream,
@@ -107,4 +76,38 @@ pub fn as_method(
         }
     }
     .into()
+}
+
+struct ImplTraitReplace(Vec<syn::TypeParam>);
+
+impl VisitMut for ImplTraitReplace {
+    fn visit_type_mut(&mut self, node: &mut syn::Type) {
+        if let syn::Type::ImplTrait(type_impl_trait) = node {
+            let ident = quote::format_ident!("AS_METHOD_SELF_T{}", self.0.len());
+            self.0.push(syn::TypeParam {
+                attrs: Vec::new(),
+                ident: ident.clone(),
+                colon_token: None,
+                bounds: type_impl_trait.bounds.clone(),
+                eq_token: None,
+                default: None,
+            });
+
+            let mut segments = syn::punctuated::Punctuated::new();
+            segments.push(syn::PathSegment {
+                ident,
+                arguments: syn::PathArguments::None,
+            });
+
+            *node = syn::Type::Path(syn::TypePath {
+                qself: None,
+                path: syn::Path {
+                    leading_colon: None,
+                    segments,
+                },
+            });
+        } else {
+            syn::visit_mut::visit_type_mut(self, node);
+        }
+    }
 }
